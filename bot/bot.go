@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/fordtom/bingo/bot/commands"
 )
 
 type Bot struct {
@@ -60,14 +61,28 @@ func (b *Bot) handleInteractionCreate(s *discordgo.Session, i *discordgo.Interac
 	subCmd := data.Options[0]
 
 	switch subCmd.Name {
-	case "create":
-		b.handleCreateCommand(s, i, subCmd.Options)
+	case "new_game":
+		commands.HandleNewGame(s, i, subCmd.Options)
+	case "delete_game":
+		commands.HandleDeleteGame(s, i, subCmd.Options)
+	case "set_active_game":
+		commands.HandleSetActiveGame(s, i, subCmd.Options)
+	case "list_games":
+		commands.HandleListGames(s, i, subCmd.Options)
+	case "list_events":
+		commands.HandleListEvents(s, i, subCmd.Options)
+	case "view_board":
+		commands.HandleViewBoard(s, i, subCmd.Options)
+	case "vote":
+		commands.HandleVote(s, i, subCmd.Options)
+	case "help":
+		commands.HandleHelp(s, i, subCmd.Options)
 	}
 }
 
 // registerCommands registers commands
 func (b *Bot) registerCommands() ([]*discordgo.ApplicationCommand, error) {
-	commandDefinitions := commands()
+	commandDefinitions := commands.All()
 	registeredCommands := make([]*discordgo.ApplicationCommand, 0, len(commandDefinitions))
 
 	for _, cmd := range commandDefinitions {
