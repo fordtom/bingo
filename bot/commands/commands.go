@@ -2,7 +2,7 @@ package commands
 
 import "github.com/bwmarrin/discordgo"
 
-const Prefix = "bg"
+const Prefix = "bingo"
 
 // All returns all command definitions assembled into the /{Prefix} command
 func All() []*discordgo.ApplicationCommand {
