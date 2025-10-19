@@ -13,7 +13,9 @@ type Bot struct {
 	userID    string
 }
 
+// Setup initializes the bot and returns a cleanup function
 func Setup(s *discordgo.Session, channelID string) (*Bot, func(), error) {
+	// Initialize bot
 	bot := &Bot{
 		session:   s,
 		channelID: channelID,
@@ -30,6 +32,7 @@ func Setup(s *discordgo.Session, channelID string) (*Bot, func(), error) {
 		return nil, nil, err
 	}
 
+	// Return cleanup function
 	cleanup := func() {
 		bot.cleanupCommands(registeredCommands)
 	}
@@ -54,7 +57,7 @@ func (b *Bot) handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 func (b *Bot) handleInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	data := i.ApplicationCommandData()
 
-	if data.Name != "bg" {
+	if data.Name != commands.Prefix {
 		return
 	}
 

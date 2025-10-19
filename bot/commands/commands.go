@@ -2,11 +2,13 @@ package commands
 
 import "github.com/bwmarrin/discordgo"
 
-// All returns all command definitions assembled into the /bg command
+const Prefix = "bg"
+
+// All returns all command definitions assembled into the /{Prefix} command
 func All() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
-			Name:        "bg",
+			Name:        Prefix,
 			Description: "Bingo game commands",
 			Options: []*discordgo.ApplicationCommandOption{
 				NewGame(),

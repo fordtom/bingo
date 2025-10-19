@@ -45,9 +45,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error opening session: ", err)
 	}
-
 	defer session.Close()
-	// Setup bot (registers handlers and commands)
+
 	_, cleanup, err := bot.Setup(session, channelID)
 	if err != nil {
 		log.Fatal("Error setting up bot: ", err)
@@ -55,6 +54,7 @@ func main() {
 	defer cleanup()
 
 	log.Println("Bot is running")
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
