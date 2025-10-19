@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -57,7 +58,11 @@ type Vote struct {
 
 // InitDB creates and configures the database connection
 func InitDB() (*DB, error) {
-	conn, err := sql.Open("sqlite3", "./bingo.db")
+	path := os.Getenv("DB_PATH")
+	if path == "" {
+		path = "./bingo.db"
+	}
+	conn, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, err
 	}
