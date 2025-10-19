@@ -26,7 +26,7 @@ func ViewBoard() *discordgo.ApplicationCommandOption {
 }
 
 // HandleViewBoard processes the view_board command
-func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption) {
+func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
 	// TODO: Implement
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

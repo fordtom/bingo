@@ -20,7 +20,7 @@ func SetActiveGame() *discordgo.ApplicationCommandOption {
 }
 
 // HandleSetActiveGame processes the set_active_game command
-func HandleSetActiveGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption) {
+func HandleSetActiveGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
 	// TODO: Implement
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fordtom/bingo/bot"
+	"github.com/fordtom/bingo/db"
 	"github.com/joho/godotenv"
 )
 
@@ -34,6 +35,13 @@ func main() {
 
 	discordToken, channelID := loadEnv()
 
+	// Initialize database
+	database, err := db.InitDB()
+	if err != nil {
+		log.Fatal("Error initializing database: ", err)
+	}
+	defer database.Close()
+
 	session, err := discordgo.New("Bot " + discordToken)
 	if err != nil {
 		log.Fatal("Error creating bot: ", err)
@@ -47,7 +55,7 @@ func main() {
 	}
 	defer session.Close()
 
-	_, cleanup, err := bot.Setup(session, channelID)
+	_, cleanup, err := bot.Setup(session, channelID, database)
 	if err != nil {
 		log.Fatal("Error setting up bot: ", err)
 	}

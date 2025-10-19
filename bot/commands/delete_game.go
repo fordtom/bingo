@@ -20,7 +20,7 @@ func DeleteGame() *discordgo.ApplicationCommandOption {
 }
 
 // HandleDeleteGame processes the delete_game command
-func HandleDeleteGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption) {
+func HandleDeleteGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
 	// TODO: Implement
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

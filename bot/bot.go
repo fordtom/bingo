@@ -5,21 +5,24 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fordtom/bingo/bot/commands"
+	"github.com/fordtom/bingo/db"
 )
 
 type Bot struct {
 	session   *discordgo.Session
 	channelID string
 	userID    string
+	db        *db.DB
 }
 
 // Setup initializes the bot and returns a cleanup function
-func Setup(s *discordgo.Session, channelID string) (*Bot, func(), error) {
+func Setup(s *discordgo.Session, channelID string, database *db.DB) (*Bot, func(), error) {
 	// Initialize bot
 	bot := &Bot{
 		session:   s,
 		channelID: channelID,
 		userID:    s.State.User.ID,
+		db:        database,
 	}
 
 	// Register handlers
@@ -65,21 +68,21 @@ func (b *Bot) handleInteractionCreate(s *discordgo.Session, i *discordgo.Interac
 
 	switch subCmd.Name {
 	case "new_game":
-		commands.HandleNewGame(s, i, subCmd.Options)
+		commands.HandleNewGame(s, i, subCmd.Options, b.db)
 	case "delete_game":
-		commands.HandleDeleteGame(s, i, subCmd.Options)
+		commands.HandleDeleteGame(s, i, subCmd.Options, b.db)
 	case "set_active_game":
-		commands.HandleSetActiveGame(s, i, subCmd.Options)
+		commands.HandleSetActiveGame(s, i, subCmd.Options, b.db)
 	case "list_games":
-		commands.HandleListGames(s, i, subCmd.Options)
+		commands.HandleListGames(s, i, subCmd.Options, b.db)
 	case "list_events":
-		commands.HandleListEvents(s, i, subCmd.Options)
+		commands.HandleListEvents(s, i, subCmd.Options, b.db)
 	case "view_board":
-		commands.HandleViewBoard(s, i, subCmd.Options)
+		commands.HandleViewBoard(s, i, subCmd.Options, b.db)
 	case "vote":
-		commands.HandleVote(s, i, subCmd.Options)
+		commands.HandleVote(s, i, subCmd.Options, b.db)
 	case "help":
-		commands.HandleHelp(s, i, subCmd.Options)
+		commands.HandleHelp(s, i, subCmd.Options, b.db)
 	}
 }
 

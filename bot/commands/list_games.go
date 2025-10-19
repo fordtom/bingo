@@ -12,7 +12,7 @@ func ListGames() *discordgo.ApplicationCommandOption {
 }
 
 // HandleListGames processes the list_games command
-func HandleListGames(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption) {
+func HandleListGames(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
 	// TODO: Implement
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

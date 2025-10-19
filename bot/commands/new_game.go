@@ -40,7 +40,7 @@ func NewGame() *discordgo.ApplicationCommandOption {
 }
 
 // HandleNewGame processes the new_game command
-func HandleNewGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption) {
+func HandleNewGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
 	// TODO: Implement
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
