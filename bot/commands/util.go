@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 
@@ -50,6 +51,12 @@ func getGameIDOrActive(ctx context.Context, database *db.DB, options []*discordg
 
 // respondError sends an ephemeral error message
 func respondError(s *discordgo.Session, i *discordgo.InteractionCreate, message string) {
+	data := i.ApplicationCommandData()
+	sub := ""
+	if len(data.Options) > 0 {
+		sub = data.Options[0].Name
+	}
+	log.Printf("err %s/%s actor=%s msg=%q", data.Name, sub, i.Member.User.ID, message)
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
@@ -61,6 +68,12 @@ func respondError(s *discordgo.Session, i *discordgo.InteractionCreate, message 
 
 // respondSuccess sends a success message
 func respondSuccess(s *discordgo.Session, i *discordgo.InteractionCreate, message string) {
+	data := i.ApplicationCommandData()
+	sub := ""
+	if len(data.Options) > 0 {
+		sub = data.Options[0].Name
+	}
+	log.Printf("ok %s/%s actor=%s msg=%q", data.Name, sub, i.Member.User.ID, message)
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{

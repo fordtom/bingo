@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +12,23 @@ import (
 	"github.com/fordtom/bingo/db"
 	"github.com/joho/godotenv"
 )
+
+// initLogger configures the global logger to write to stdout and a file.
+// It returns a cleanup function that must be deferred to close the file.
+func initLogger() (func(), error) {
+	path := os.Getenv("LOG_FILE")
+	if path == "" {
+		path = "bingo.log"
+	}
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	if err != nil {
+		return nil, err
+	}
+	log.SetOutput(io.MultiWriter(os.Stdout, f))
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
+	log.SetPrefix("bingo ")
+	return func() { _ = f.Close() }, nil
+}
 
 func loadEnv() (string, string) {
 	err := godotenv.Load()
@@ -32,6 +50,11 @@ func loadEnv() (string, string) {
 }
 
 func main() {
+	cleanup, err := initLogger()
+	if err != nil {
+		log.Fatalf("log setup failed: %v", err)
+	}
+	defer cleanup()
 
 	discordToken, channelID := loadEnv()
 
@@ -55,11 +78,12 @@ func main() {
 	}
 	defer session.Close()
 
-	_, cleanup, err := bot.Setup(session, channelID, database)
+	var botCleanup func()
+	_, botCleanup, err = bot.Setup(session, channelID, database)
 	if err != nil {
 		log.Fatal("Error setting up bot: ", err)
 	}
-	defer cleanup()
+	defer botCleanup()
 
 	log.Println("Bot is running")
 

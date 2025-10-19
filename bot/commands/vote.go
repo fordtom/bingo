@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
 
 	"github.com/bwmarrin/discordgo"
@@ -125,6 +126,7 @@ func HandleVote(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 		}
 	}
 
+	log.Printf("ok bg/vote actor=%s game_id=%d event_display_id=%d closed=%t", i.Member.User.ID, gameID, displayID, voteCount >= threshold)
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
