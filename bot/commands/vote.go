@@ -127,12 +127,13 @@ func HandleVote(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 	}
 
 	log.Printf("ok bg/vote actor=%s game_id=%d event_display_id=%d closed=%t", i.Member.User.ID, gameID, displayID, voteCount >= threshold)
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: response,
-		},
-	})
+	title := "Vote Recorded"
+	color := colorSuccess
+	if voteCount >= threshold {
+		title = fmt.Sprintf("Event Closed: #%d — %s", displayID, event.Description)
+		color = colorWin
+	}
+	respondEmbed(s, i, title, response, color, false)
 }
 
 // checkWinners checks all boards for bingo (row, column, or diagonal)

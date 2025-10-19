@@ -34,7 +34,7 @@ func HandleListGames(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 	}
 
 	var lines []string
-	lines = append(lines, "**Bingo Games**\n")
+	title := "Bingo Games"
 
 	for _, game := range games {
 		open, closed, err := database.GetEventCounts(ctx, game.ID)
@@ -59,5 +59,6 @@ func HandleListGames(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 		lines = append(lines, line)
 	}
 
-	respondSuccess(s, i, strings.Join(lines, "\n"))
+	desc := strings.Join(lines, "\n")
+	respondEmbed(s, i, title, desc, colorInfo, false)
 }

@@ -70,5 +70,6 @@ func HandleDeleteGame(s *discordgo.Session, i *discordgo.InteractionCreate, opti
 		}
 	}
 
-	respondSuccess(s, i, response)
+	titleText := "Game Deleted"
+	respondEmbed(s, i, titleText, response, colorSuccess, false)
 }

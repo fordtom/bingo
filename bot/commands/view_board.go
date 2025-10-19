@@ -38,9 +38,11 @@ func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 
 	// Parse user
 	var userID int64
+	var userSnowflake string
 	for _, opt := range options {
 		if opt.Name == "user" {
-			userID = parseUserID(opt.UserValue(s).ID)
+			userSnowflake = opt.UserValue(s).ID
+			userID = parseUserID(userSnowflake)
 			break
 		}
 	}
@@ -89,7 +91,6 @@ func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 
 	// Render text grid
 	var lines []string
-	lines = append(lines, fmt.Sprintf("**Board for <@%d> - Game #%d: %s**\n", userID, gameID, game.Title))
 
 	for row := 0; row < gridSize; row++ {
 		var cells []string
@@ -106,5 +107,8 @@ func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 		lines = append(lines, strings.Join(cells, " "))
 	}
 
-	respondSuccess(s, i, "```\n"+strings.Join(lines, "\n")+"\n```")
+	displayName := userDisplayName(s, i.GuildID, userSnowflake)
+	title := fmt.Sprintf("Board for %s — Game #%d: %s", displayName, gameID, game.Title)
+	desc := "```\n" + strings.Join(lines, "\n") + "\n```"
+	respondEmbed(s, i, title, desc, colorInfo, false)
 }

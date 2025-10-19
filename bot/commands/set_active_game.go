@@ -47,5 +47,7 @@ func HandleSetActiveGame(s *discordgo.Session, i *discordgo.InteractionCreate, o
 		return
 	}
 
-	respondSuccess(s, i, fmt.Sprintf("✓ Game #%d (**%s**) is now active.", gameID, game.Title))
+	titleText := "Active Game Set"
+	desc := fmt.Sprintf("✓ Game #%d (**%s**) is now active.", gameID, game.Title)
+	respondEmbed(s, i, titleText, desc, colorSuccess, false)
 }

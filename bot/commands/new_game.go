@@ -155,7 +155,9 @@ func HandleNewGame(s *discordgo.Session, i *discordgo.InteractionCreate, options
 		return
 	}
 
-	respondSuccess(s, i, fmt.Sprintf("✓ Game #%d **%s** created!\n%dx%d grid | %d events | %d players", gameID, title, gridSize, gridSize, len(events), len(playerIDs)))
+	titleText := fmt.Sprintf("Game Created: #%d — %s", gameID, title)
+	msg := fmt.Sprintf("%dx%d grid | %d events | %d players", gridSize, gridSize, len(events), len(playerIDs))
+	respondEmbed(s, i, titleText, msg, colorSuccess, false)
 }
 
 // fetchAndParseCSV fetches a CSV file from URL and parses event descriptions
@@ -163,6 +165,9 @@ func fetchAndParseCSV(url string) ([]string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch CSV: %s", resp.Status)
 	}
 	defer resp.Body.Close()
 

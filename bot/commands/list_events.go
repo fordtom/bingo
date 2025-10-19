@@ -69,7 +69,7 @@ func HandleListEvents(s *discordgo.Session, i *discordgo.InteractionCreate, opti
 	}
 
 	var lines []string
-	lines = append(lines, fmt.Sprintf("**Events for Game #%d: %s**\n", gameID, game.Title))
+	title := fmt.Sprintf("Events for Game #%d: %s", gameID, game.Title)
 
 	for _, event := range events {
 		if event.Status == "CLOSED" {
@@ -84,5 +84,6 @@ func HandleListEvents(s *discordgo.Session, i *discordgo.InteractionCreate, opti
 		}
 	}
 
-	respondSuccess(s, i, strings.Join(lines, "\n"))
+	desc := strings.Join(lines, "\n")
+	respondEmbed(s, i, title, desc, colorInfo, false)
 }

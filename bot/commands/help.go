@@ -16,8 +16,7 @@ func Help() *discordgo.ApplicationCommandOption {
 
 // HandleHelp processes the help command
 func HandleHelp(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, database *db.DB) {
-	helpText := "**BingoBot Commands**\n\n" +
-		"**Game Management**\n" +
+	helpText := "**Game Management**\n" +
 		"• `/bg new_game` - Create a game with events and player boards (requires CSV)\n" +
 		"• `/bg delete_game <game_id>` - Delete a game and all data\n" +
 		"• `/bg set_active_game <game_id>` - Set the active game\n\n" +
@@ -35,10 +34,5 @@ func HandleHelp(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 		"• Consensus: 100% for ≤3 players, 60% for larger games\n" +
 		"• When consensus reached, event closes and winners are checked"
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: helpText,
-		},
-	})
+	respondEmbed(s, i, "BingoBot Commands", helpText, colorInfo, false)
 }
