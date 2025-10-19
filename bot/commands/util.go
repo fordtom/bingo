@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -134,4 +135,30 @@ func respondSuccess(s *discordgo.Session, i *discordgo.InteractionCreate, messag
 	}
 	log.Printf("ok %s/%s actor=%s msg=%q", data.Name, sub, actor, message)
 	respondEmbed(s, i, "", message, colorInfo, false)
+}
+
+// respondEmbedWithImage sends an embed with an attached image file
+func respondEmbedWithImage(s *discordgo.Session, i *discordgo.InteractionCreate, title string, color int, filename string, imageBytes []byte) error {
+	embed := &discordgo.MessageEmbed{
+		Title:     title,
+		Color:     color,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Image: &discordgo.MessageEmbedImage{
+			URL: "attachment://" + filename,
+		},
+	}
+
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{embed},
+			Files: []*discordgo.File{
+				{
+					Name:        filename,
+					ContentType: "image/png",
+					Reader:      bytes.NewReader(imageBytes),
+				},
+			},
+		},
+	})
 }

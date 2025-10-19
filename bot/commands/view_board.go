@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fordtom/bingo/db"
@@ -72,13 +71,6 @@ func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 		return
 	}
 
-	// Get event display ID map
-	displayMap, err := database.GetEventDisplayIDMap(ctx, gameID)
-	if err != nil {
-		respondError(s, i, "Error fetching event display IDs: "+err.Error())
-		return
-	}
-
 	// Build grid from squares
 	gridSize := board.GridSize
 	grid := make([][]db.BoardSquareWithEvent, gridSize)
@@ -89,26 +81,20 @@ func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 		grid[sq.Row][sq.Column] = sq
 	}
 
-	// Render text grid
-	var lines []string
-
-	for row := 0; row < gridSize; row++ {
-		var cells []string
-		for col := 0; col < gridSize; col++ {
-			sq := grid[row][col]
-			displayID := displayMap[sq.EventID]
-
-			status := ""
-			if sq.EventStatus == "CLOSED" {
-				status = "✅"
-			}
-			cells = append(cells, fmt.Sprintf("[%02d%s]", displayID, status))
-		}
-		lines = append(lines, strings.Join(cells, " "))
+	// Generate board image
+	imageBytes, err := GenerateBoardImage(grid, gridSize)
+	if err != nil {
+		respondError(s, i, "Error generating board image: "+err.Error())
+		return
 	}
 
+	// Create title and filename
 	displayName := userDisplayName(s, i.GuildID, userSnowflake)
 	title := fmt.Sprintf("Board for %s — Game #%d: %s", displayName, gameID, game.Title)
-	desc := "```\n" + strings.Join(lines, "\n") + "\n```"
-	respondEmbed(s, i, title, desc, colorInfo, false)
+	filename := fmt.Sprintf("board_game%d_user%d.png", gameID, userID)
+
+	// Send embed with image
+	if err := respondEmbedWithImage(s, i, title, colorInfo, filename, imageBytes); err != nil {
+		respondError(s, i, "Error sending board image: "+err.Error())
+	}
 }
