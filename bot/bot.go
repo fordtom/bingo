@@ -51,9 +51,8 @@ func (b *Bot) handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 	}
 
 	if m.ChannelID == b.channelID {
-		if strings.Contains(m.Content, "bingo") {
-			s.ChannelMessageSend(m.ChannelID, m.Content)
-			log.Println(m.Content)
+		if strings.Contains(m.Content, "<@"+b.userID+">") {
+			s.ChannelMessageSend(m.ChannelID, "hello")
 		}
 	}
 }
