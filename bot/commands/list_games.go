@@ -1,6 +1,13 @@
 package commands
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/fordtom/bingo/db"
+)
 
 // ListGames returns the list_games subcommand definition
 func ListGames() *discordgo.ApplicationCommandOption {
@@ -12,12 +19,45 @@ func ListGames() *discordgo.ApplicationCommandOption {
 }
 
 // HandleListGames processes the list_games command
-func HandleListGames(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
-	// TODO: Implement
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "list_games command not yet implemented",
-		},
-	})
+func HandleListGames(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, database *db.DB) {
+	ctx := context.Background()
+
+	games, err := database.ListGames(ctx)
+	if err != nil {
+		respondError(s, i, "Error fetching games: "+err.Error())
+		return
+	}
+
+	if len(games) == 0 {
+		respondSuccess(s, i, "No games found. Create one with `/bg new_game`.")
+		return
+	}
+
+	var lines []string
+	lines = append(lines, "**Bingo Games**\n")
+
+	for _, game := range games {
+		open, closed, err := database.GetEventCounts(ctx, game.ID)
+		if err != nil {
+			respondError(s, i, "Error fetching event counts: "+err.Error())
+			return
+		}
+
+		playerCount, err := database.GetPlayerCountForGame(ctx, game.ID)
+		if err != nil {
+			respondError(s, i, "Error fetching player count: "+err.Error())
+			return
+		}
+
+		activeMarker := ""
+		if game.IsActive {
+			activeMarker = " **(active)**"
+		}
+
+		line := fmt.Sprintf("**#%d** %s%s\n  %dx%d grid | %d open, %d closed | %d players",
+			game.ID, game.Title, activeMarker, game.GridSize, game.GridSize, open, closed, playerCount)
+		lines = append(lines, line)
+	}
+
+	respondSuccess(s, i, strings.Join(lines, "\n"))
 }

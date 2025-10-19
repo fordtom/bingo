@@ -2,6 +2,7 @@ package bot
 
 import (
 	"log"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fordtom/bingo/bot/commands"
@@ -50,8 +51,9 @@ func (b *Bot) handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 	}
 
 	if m.ChannelID == b.channelID {
-		if m.Content == "bingo" {
-			s.ChannelMessageSend(m.ChannelID, "thats me boss")
+		if strings.Contains(m.Content, "bingo") {
+			s.ChannelMessageSend(m.ChannelID, m.Content)
+			log.Println(m.Content)
 		}
 	}
 }

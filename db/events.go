@@ -82,3 +82,26 @@ func (db *DB) UpdateEventStatus(ctx context.Context, eventID int64, status strin
 	)
 	return err
 }
+
+// GetEventDisplayIDMap returns a map of event_id -> display_id for a game
+func (db *DB) GetEventDisplayIDMap(ctx context.Context, gameID int64) (map[int64]int, error) {
+	rows, err := db.conn.QueryContext(ctx,
+		"SELECT event_id, display_id FROM events WHERE game_id = ?",
+		gameID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	displayMap := make(map[int64]int)
+	for rows.Next() {
+		var eventID int64
+		var displayID int
+		if err := rows.Scan(&eventID, &displayID); err != nil {
+			return nil, err
+		}
+		displayMap[eventID] = displayID
+	}
+	return displayMap, rows.Err()
+}

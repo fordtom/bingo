@@ -1,6 +1,12 @@
 package commands
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"context"
+	"fmt"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/fordtom/bingo/db"
+)
 
 // SetActiveGame returns the set_active_game subcommand definition
 func SetActiveGame() *discordgo.ApplicationCommandOption {
@@ -20,12 +26,26 @@ func SetActiveGame() *discordgo.ApplicationCommandOption {
 }
 
 // HandleSetActiveGame processes the set_active_game command
-func HandleSetActiveGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
-	// TODO: Implement
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "set_active_game command not yet implemented",
-		},
-	})
+func HandleSetActiveGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, database *db.DB) {
+	ctx := context.Background()
+	gameID := options[0].IntValue()
+
+	// Verify game exists
+	game, err := database.GetGame(ctx, gameID)
+	if err != nil {
+		respondError(s, i, "Error checking game: "+err.Error())
+		return
+	}
+	if game == nil {
+		respondError(s, i, fmt.Sprintf("Game #%d not found.", gameID))
+		return
+	}
+
+	// Set as active
+	if err := database.SetActiveGame(ctx, gameID); err != nil {
+		respondError(s, i, "Error setting active game: "+err.Error())
+		return
+	}
+
+	respondSuccess(s, i, fmt.Sprintf("✓ Game #%d (**%s**) is now active.", gameID, game.Title))
 }

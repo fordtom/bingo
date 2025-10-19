@@ -1,6 +1,13 @@
 package commands
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/fordtom/bingo/db"
+)
 
 // ViewBoard returns the view_board subcommand definition
 func ViewBoard() *discordgo.ApplicationCommandOption {
@@ -26,12 +33,78 @@ func ViewBoard() *discordgo.ApplicationCommandOption {
 }
 
 // HandleViewBoard processes the view_board command
-func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, db interface{}) {
-	// TODO: Implement
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "view_board command not yet implemented",
-		},
-	})
+func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, database *db.DB) {
+	ctx := context.Background()
+
+	// Parse user
+	var userID int64
+	for _, opt := range options {
+		if opt.Name == "user" {
+			userID = parseUserID(opt.UserValue(s).ID)
+			break
+		}
+	}
+
+	// Get game ID
+	gameID, err := getGameIDOrActive(ctx, database, options, "game_id")
+	if err != nil {
+		respondError(s, i, err.Error())
+		return
+	}
+
+	// Get game info
+	game, err := database.GetGame(ctx, gameID)
+	if err != nil {
+		respondError(s, i, "Error fetching game: "+err.Error())
+		return
+	}
+
+	// Get board
+	board, squares, err := database.GetUserBoard(ctx, gameID, userID)
+	if err != nil {
+		respondError(s, i, "Error fetching board: "+err.Error())
+		return
+	}
+	if board == nil {
+		respondError(s, i, fmt.Sprintf("No board found for <@%d> in game #%d.", userID, gameID))
+		return
+	}
+
+	// Get event display ID map
+	displayMap, err := database.GetEventDisplayIDMap(ctx, gameID)
+	if err != nil {
+		respondError(s, i, "Error fetching event display IDs: "+err.Error())
+		return
+	}
+
+	// Build grid from squares
+	gridSize := board.GridSize
+	grid := make([][]db.BoardSquareWithEvent, gridSize)
+	for i := range grid {
+		grid[i] = make([]db.BoardSquareWithEvent, gridSize)
+	}
+	for _, sq := range squares {
+		grid[sq.Row][sq.Column] = sq
+	}
+
+	// Render text grid
+	var lines []string
+	lines = append(lines, fmt.Sprintf("**Board for <@%d> - Game #%d: %s**\n", userID, gameID, game.Title))
+
+	for row := 0; row < gridSize; row++ {
+		var cells []string
+		for col := 0; col < gridSize; col++ {
+			sq := grid[row][col]
+			displayID := displayMap[sq.EventID]
+
+			status := ""
+			if sq.EventStatus == "CLOSED" {
+				status = "✅"
+			}
+			cells = append(cells, fmt.Sprintf("[%02d%s]", displayID, status))
+		}
+		lines = append(lines, strings.Join(cells, " "))
+	}
+
+	respondSuccess(s, i, "```\n"+strings.Join(lines, "\n")+"\n```")
 }
