@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -89,35 +88,13 @@ func HandleViewBoard(s *discordgo.Session, i *discordgo.InteractionCreate, optio
 		return
 	}
 
-	// Create filename and message
+	// Create title and filename
 	displayName := userDisplayName(s, i.GuildID, userSnowflake)
+	title := fmt.Sprintf("Board for %s — Game #%d: %s", displayName, gameID, game.Title)
 	filename := fmt.Sprintf("board_game%d_user%d.png", gameID, userID)
-	message := fmt.Sprintf("Board for %s — Game #%d: %s", displayName, gameID, game.Title)
 
-	// Respond to interaction first
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: message,
-		},
-	})
-	if err != nil {
-		respondError(s, i, "Error responding: "+err.Error())
-		return
-	}
-
-	// Send image as follow-up
-	_, err = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-		Files: []*discordgo.File{
-			{
-				Name:        filename,
-				ContentType: "image/png",
-				Reader:      bytes.NewReader(imageBytes),
-			},
-		},
-	})
-	if err != nil {
-		// Log error but don't fail - message was already sent
-		fmt.Printf("Error sending board image: %v\n", err)
+	// Send embed with image
+	if err := respondEmbedWithImage(s, i, title, colorInfo, filename, imageBytes); err != nil {
+		respondError(s, i, "Error sending board image: "+err.Error())
 	}
 }
