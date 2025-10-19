@@ -1,0 +1,1 @@
+nohup op run -- ./bingo > bingo.log 2>&1 & disown
