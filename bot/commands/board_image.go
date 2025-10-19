@@ -16,7 +16,7 @@ const (
 	padding     = 10   // padding around board
 	fontSize    = 14.0 // base font size
 	lineSpacing = 1.3  // line height multiplier
-	maxLines    = 3    // max lines of text per cell
+	maxLines    = 4    // max lines of text per cell
 	maxChars    = 47   // truncate with "..." above this
 )
 
@@ -103,8 +103,10 @@ func drawCell(dc *gg.Context, row, col int, sq db.BoardSquareWithEvent) {
 // wrapText breaks text into multiple lines, avoiding word splits and truncating with "..."
 func wrapText(dc *gg.Context, text string, maxWidth float64) []string {
 	// Truncate if too long
+	truncated := false
 	if len(text) > maxChars {
-		text = text[:maxChars] + "…"
+		text = text[:maxChars]
+		truncated = true
 	}
 
 	words := strings.Fields(text)
@@ -114,8 +116,11 @@ func wrapText(dc *gg.Context, text string, maxWidth float64) []string {
 
 	var lines []string
 	var currentLine strings.Builder
+	wordIdx := 0
 
-	for _, word := range words {
+	for wordIdx < len(words) {
+		word := words[wordIdx]
+
 		// Try adding word to current line
 		testLine := currentLine.String()
 		if testLine != "" {
@@ -132,43 +137,50 @@ func wrapText(dc *gg.Context, text string, maxWidth float64) []string {
 				currentLine.WriteString(" ")
 			}
 			currentLine.WriteString(word)
+			wordIdx++
 		} else {
 			// Word doesn't fit
 			if currentLine.Len() == 0 {
-				// Single word is too long, break it with hyphen
+				// Single word is too long, add it anyway (will overflow)
 				currentLine.WriteString(word)
+				wordIdx++
 			} else {
-				// Start new line
+				// Start new line with current word
 				lines = append(lines, currentLine.String())
+				
+				// Check if we've hit max lines
+				if len(lines) >= maxLines {
+					// Add ellipsis to last line since we have more words
+					lastLine := lines[len(lines)-1]
+					// Ensure there's room for ellipsis
+					for len(lastLine) > 0 {
+						testWithEllipsis := lastLine + "…"
+						width, _ := dc.MeasureString(testWithEllipsis)
+						if width <= maxWidth {
+							lines[len(lines)-1] = testWithEllipsis
+							break
+						}
+						// Remove last character and try again
+						lastLine = lastLine[:len(lastLine)-1]
+					}
+					break
+				}
+				
 				currentLine.Reset()
 				currentLine.WriteString(word)
+				wordIdx++
 			}
-		}
-
-		// Stop if we hit max lines
-		if len(lines) >= maxLines {
-			break
 		}
 	}
 
-	// Add remaining text
+	// Add remaining text if we haven't hit max lines
 	if currentLine.Len() > 0 && len(lines) < maxLines {
-		lines = append(lines, currentLine.String())
-	}
-
-	// If we hit max lines but have more words, truncate last line with "..."
-	if len(words) > 0 && len(lines) == maxLines {
-		// Check if we've processed all words
-		processedWords := 0
-		for _, line := range lines {
-			processedWords += len(strings.Fields(line))
+		line := currentLine.String()
+		// If we had truncated the original text, add ellipsis
+		if truncated && wordIdx >= len(words) {
+			line += "…"
 		}
-		if processedWords < len(words) {
-			lastLine := lines[len(lines)-1]
-			if len(lastLine) > 3 {
-				lines[len(lines)-1] = lastLine[:len(lastLine)-3] + "…"
-			}
-		}
+		lines = append(lines, line)
 	}
 
 	return lines
