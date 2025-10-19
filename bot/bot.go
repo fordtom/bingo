@@ -60,6 +60,10 @@ func (b *Bot) handleMessageCreate(s *discordgo.Session, m *discordgo.MessageCrea
 
 // handleInteractionCreate routes slash commands
 func (b *Bot) handleInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i.ChannelID != b.channelID {
+		return
+	}
+
 	data := i.ApplicationCommandData()
 
 	if data.Name != commands.Prefix {
