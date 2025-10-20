@@ -63,7 +63,7 @@ func drawCell(dc *gg.Context, row, col int, sq db.BoardSquareWithEvent) {
 	y := float64(row*cellSize + padding)
 
 	// Draw background
-	if sq.EventStatus == "CLOSED" {
+	if sq.EventStatus == string(db.EventStatusClosed) {
 		dc.SetColor(colorCompleted)
 	} else {
 		dc.SetColor(colorOpen)

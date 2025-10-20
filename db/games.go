@@ -157,14 +157,14 @@ func (db *DB) GetEventCounts(ctx context.Context, gameID int64) (open, closed in
 	defer rows.Close()
 
 	for rows.Next() {
-		var status string
+		var status EventStatus
 		var count int
 		if err := rows.Scan(&status, &count); err != nil {
 			return 0, 0, err
 		}
-		if status == "OPEN" {
+		if status == EventStatusOpen {
 			open = count
-		} else if status == "CLOSED" {
+		} else if status == EventStatusClosed {
 			closed = count
 		}
 	}

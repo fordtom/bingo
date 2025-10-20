@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fordtom/bingo/db"
@@ -39,7 +40,11 @@ func HandleVote(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 	userID := parseUserID(i.Member.User.ID)
 
 	// Parse options
-	displayID := int(options[0].IntValue())
+	displayID, ok := getIntOption(options, "event_id")
+	if !ok {
+		respondError(s, i, "Missing required event_id option.")
+		return
+	}
 
 	// Get game ID (either specified or active)
 	gameID, err := getGameIDOrActive(ctx, database, options, "game_id")
@@ -49,7 +54,7 @@ func HandleVote(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 	}
 
 	// Look up event by display_id
-	event, err := database.GetEventByDisplayID(ctx, gameID, displayID)
+	event, err := database.GetEventByDisplayID(ctx, gameID, int(displayID))
 	if err != nil {
 		respondError(s, i, "Error fetching event: "+err.Error())
 		return
@@ -60,24 +65,18 @@ func HandleVote(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 	}
 
 	// Check if event is already closed
-	if event.Status == "CLOSED" {
+	if event.Status == string(db.EventStatusClosed) {
 		respondError(s, i, fmt.Sprintf("Event #%d has already been marked as occurred.", displayID))
 		return
 	}
 
-	// Check if user already voted
-	hasVoted, err := database.HasUserVoted(ctx, event.ID, userID)
-	if err != nil {
-		respondError(s, i, "Error checking vote status: "+err.Error())
-		return
-	}
-	if hasVoted {
-		respondError(s, i, fmt.Sprintf("You have already voted for event #%d.", displayID))
-		return
-	}
-
-	// Record the vote
+	// Record the vote (will fail if already voted due to PRIMARY KEY constraint)
 	if err := database.CreateVote(ctx, event.ID, userID); err != nil {
+		// Check if this is a duplicate vote constraint violation
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") || strings.Contains(err.Error(), "PRIMARY KEY") {
+			respondError(s, i, fmt.Sprintf("You have already voted for event #%d.", displayID))
+			return
+		}
 		respondError(s, i, "Error recording vote: "+err.Error())
 		return
 	}
@@ -105,7 +104,7 @@ func HandleVote(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 
 	// Close event if threshold reached
 	if voteCount >= threshold {
-		if err := database.UpdateEventStatus(ctx, event.ID, "CLOSED"); err != nil {
+		if err := database.UpdateEventStatus(ctx, event.ID, db.EventStatusClosed); err != nil {
 			respondError(s, i, "Vote recorded, but error closing event: "+err.Error())
 			return
 		}
@@ -172,7 +171,7 @@ func checkPlayerWin(ctx context.Context, database *db.DB, gameID, playerID int64
 		grid[i] = make([]bool, gridSize)
 	}
 	for _, sq := range squares {
-		grid[sq.Row][sq.Column] = (sq.EventStatus == "CLOSED")
+		grid[sq.Row][sq.Column] = (sq.EventStatus == string(db.EventStatusClosed))
 	}
 
 	// Check rows

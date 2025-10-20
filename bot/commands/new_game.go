@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/fordtom/bingo/db"
@@ -56,22 +57,29 @@ func HandleNewGame(s *discordgo.Session, i *discordgo.InteractionCreate, options
 	ctx := context.Background()
 
 	// Parse options
-	var title string
-	var gridSize int
-	var playerIDsStr string
-	var attachmentID string
+	title, ok := getStringOption(options, "title")
+	if !ok {
+		respondError(s, i, "Missing required title option.")
+		return
+	}
 
-	for _, opt := range options {
-		switch opt.Name {
-		case "title":
-			title = opt.StringValue()
-		case "grid_size":
-			gridSize = int(opt.IntValue())
-		case "player_ids":
-			playerIDsStr = opt.StringValue()
-		case "events_csv":
-			attachmentID = opt.Value.(string)
-		}
+	gridSizeInt, ok := getIntOption(options, "grid_size")
+	if !ok {
+		respondError(s, i, "Missing required grid_size option.")
+		return
+	}
+	gridSize := int(gridSizeInt)
+
+	playerIDsStr, ok := getStringOption(options, "player_ids")
+	if !ok {
+		respondError(s, i, "Missing required player_ids option.")
+		return
+	}
+
+	attachmentID, ok := getAttachmentOption(options, "events_csv")
+	if !ok {
+		respondError(s, i, "Missing required events_csv option.")
+		return
 	}
 
 	// Parse player IDs from mentions
@@ -82,7 +90,16 @@ func HandleNewGame(s *discordgo.Session, i *discordgo.InteractionCreate, options
 	}
 
 	// Fetch and parse CSV
-	attachment := i.ApplicationCommandData().Resolved.Attachments[attachmentID]
+	resolved := i.ApplicationCommandData().Resolved
+	if resolved == nil || resolved.Attachments == nil {
+		respondError(s, i, "No attachments found in request.")
+		return
+	}
+	attachment, exists := resolved.Attachments[attachmentID]
+	if !exists {
+		respondError(s, i, "Attachment not found in request.")
+		return
+	}
 	events, err := fetchAndParseCSV(attachment.URL)
 	if err != nil {
 		respondError(s, i, "Error parsing CSV: "+err.Error())
@@ -162,7 +179,10 @@ func HandleNewGame(s *discordgo.Session, i *discordgo.InteractionCreate, options
 
 // fetchAndParseCSV fetches a CSV file from URL and parses event descriptions
 func fetchAndParseCSV(url string) ([]string, error) {
-	resp, err := http.Get(url)
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +191,13 @@ func fetchAndParseCSV(url string) ([]string, error) {
 	}
 	defer resp.Body.Close()
 
-	reader := csv.NewReader(resp.Body)
+	// Limit read size to 1MB
+	limitedReader := &io.LimitedReader{
+		R: resp.Body,
+		N: 1 << 20, // 1MB
+	}
+
+	reader := csv.NewReader(limitedReader)
 	reader.TrimLeadingSpace = true
 
 	var events []string

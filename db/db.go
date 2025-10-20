@@ -3,16 +3,28 @@ package db
 import (
 	"context"
 	"database/sql"
+	_ "embed"
 	"os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
+//go:embed migrations/init_schema.sql
+var initSchemaSQL string
+
 // DB wraps the database connection and provides data access methods
 type DB struct {
 	conn *sql.DB
 }
+
+// EventStatus represents the status of an event
+type EventStatus string
+
+const (
+	EventStatusOpen   EventStatus = "OPEN"
+	EventStatusClosed EventStatus = "CLOSED"
+)
 
 // Domain types
 type Game struct {
@@ -79,7 +91,30 @@ func InitDB() (*DB, error) {
 		return nil, err
 	}
 
+	// Ensure schema exists
+	if err := ensureSchema(conn); err != nil {
+		return nil, err
+	}
+
 	return &DB{conn: conn}, nil
+}
+
+// ensureSchema creates tables if they don't exist
+func ensureSchema(conn *sql.DB) error {
+	// Check if tables already exist by looking for the games table
+	var count int
+	err := conn.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='games'").Scan(&count)
+	if err != nil {
+		return err
+	}
+
+	// If tables don't exist, create them
+	if count == 0 {
+		_, err := conn.Exec(initSchemaSQL)
+		return err
+	}
+
+	return nil
 }
 
 // Close closes the database connection

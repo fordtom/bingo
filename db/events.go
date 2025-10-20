@@ -8,8 +8,8 @@ import (
 // CreateEvent creates a single event for a game with a specific display_id
 func (db *DB) CreateEvent(ctx context.Context, tx *sql.Tx, gameID int64, displayID int, description string) (int64, error) {
 	result, err := tx.ExecContext(ctx,
-		"INSERT INTO events (game_id, display_id, description, status) VALUES (?, ?, ?, 'OPEN')",
-		gameID, displayID, description,
+		"INSERT INTO events (game_id, display_id, description, status) VALUES (?, ?, ?, ?)",
+		gameID, displayID, description, EventStatusOpen,
 	)
 	if err != nil {
 		return 0, err
@@ -20,7 +20,7 @@ func (db *DB) CreateEvent(ctx context.Context, tx *sql.Tx, gameID int64, display
 // CreateEvents bulk creates events for a game with sequential display_ids starting at 1
 func (db *DB) CreateEvents(ctx context.Context, tx *sql.Tx, gameID int64, descriptions []string) error {
 	stmt, err := tx.PrepareContext(ctx,
-		"INSERT INTO events (game_id, display_id, description, status) VALUES (?, ?, ?, 'OPEN')",
+		"INSERT INTO events (game_id, display_id, description, status) VALUES (?, ?, ?, ?)",
 	)
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func (db *DB) CreateEvents(ctx context.Context, tx *sql.Tx, gameID int64, descri
 
 	for i, description := range descriptions {
 		displayID := i + 1 // 1-indexed for users
-		if _, err := stmt.ExecContext(ctx, gameID, displayID, description); err != nil {
+		if _, err := stmt.ExecContext(ctx, gameID, displayID, description, EventStatusOpen); err != nil {
 			return err
 		}
 	}
@@ -74,8 +74,8 @@ func (db *DB) GetGameEvents(ctx context.Context, gameID int64) ([]Event, error) 
 	return events, rows.Err()
 }
 
-// UpdateEventStatus changes an event's status to 'OPEN' or 'CLOSED'
-func (db *DB) UpdateEventStatus(ctx context.Context, eventID int64, status string) error {
+// UpdateEventStatus changes an event's status
+func (db *DB) UpdateEventStatus(ctx context.Context, eventID int64, status EventStatus) error {
 	_, err := db.conn.ExecContext(ctx,
 		"UPDATE events SET status = ? WHERE event_id = ?",
 		status, eventID,

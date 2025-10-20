@@ -15,6 +15,38 @@ import (
 
 var mentionRegex = regexp.MustCompile(`<@!?(\d+)>`)
 
+// getIntOption retrieves an integer option by name from a list of options
+func getIntOption(options []*discordgo.ApplicationCommandInteractionDataOption, name string) (int64, bool) {
+	for _, opt := range options {
+		if opt.Name == name {
+			return opt.IntValue(), true
+		}
+	}
+	return 0, false
+}
+
+// getStringOption retrieves a string option by name from a list of options
+func getStringOption(options []*discordgo.ApplicationCommandInteractionDataOption, name string) (string, bool) {
+	for _, opt := range options {
+		if opt.Name == name {
+			return opt.StringValue(), true
+		}
+	}
+	return "", false
+}
+
+// getAttachmentOption retrieves an attachment option by name from a list of options
+func getAttachmentOption(options []*discordgo.ApplicationCommandInteractionDataOption, name string) (string, bool) {
+	for _, opt := range options {
+		if opt.Name == name {
+			if attachmentID, ok := opt.Value.(string); ok {
+				return attachmentID, true
+			}
+		}
+	}
+	return "", false
+}
+
 // parseMentionsToIDs extracts Discord user IDs from mention strings
 func parseMentionsToIDs(s string) []int64 {
 	matches := mentionRegex.FindAllStringSubmatch(s, -1)

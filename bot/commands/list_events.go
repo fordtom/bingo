@@ -72,7 +72,7 @@ func HandleListEvents(s *discordgo.Session, i *discordgo.InteractionCreate, opti
 	title := fmt.Sprintf("Events for Game #%d: %s", gameID, game.Title)
 
 	for _, event := range events {
-		if event.Status == "CLOSED" {
+		if event.Status == string(db.EventStatusClosed) {
 			lines = append(lines, fmt.Sprintf("**#%d** %s ✅", event.DisplayID, event.Description))
 		} else {
 			voteCount, err := database.GetVoteCount(ctx, event.ID)

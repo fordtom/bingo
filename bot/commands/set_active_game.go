@@ -28,7 +28,12 @@ func SetActiveGame() *discordgo.ApplicationCommandOption {
 // HandleSetActiveGame processes the set_active_game command
 func HandleSetActiveGame(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, database *db.DB) {
 	ctx := context.Background()
-	gameID := options[0].IntValue()
+
+	gameID, ok := getIntOption(options, "game_id")
+	if !ok {
+		respondError(s, i, "Missing required game_id option.")
+		return
+	}
 
 	// Verify game exists
 	game, err := database.GetGame(ctx, gameID)
