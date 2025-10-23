@@ -19,8 +19,9 @@
           pname = "bingo-bot";
           version = "0.1.0";
           src = ./.;
-          vendorHash = null; # Use go.sum instead of vendoring
-          CGO_ENABLED = 1;
+          vendorHash = pkgs.lib.fakeHash;
+          
+          CGO_ENABLED = "1";
           nativeBuildInputs = with pkgs; [gcc];
           buildInputs = with pkgs; [sqlite];
         };
