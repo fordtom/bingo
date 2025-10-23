@@ -15,6 +15,16 @@
           inherit system;
         };
       in {
+        packages.default = pkgs.buildGoModule {
+          pname = "bingo-bot";
+          version = "0.1.0";
+          src = ./.;
+          vendorHash = null; # Use go.sum instead of vendoring
+          CGO_ENABLED = 1;
+          nativeBuildInputs = with pkgs; [gcc];
+          buildInputs = with pkgs; [sqlite];
+        };
+
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             go
