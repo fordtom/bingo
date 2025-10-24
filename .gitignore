@@ -3,3 +3,4 @@ bingo
 *.db
 *.log
 .direnv
+result

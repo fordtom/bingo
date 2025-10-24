@@ -23,15 +23,17 @@
           src = ./.;
 
           # First build: this will fail and print the correct hash.
-          vendorHash = lib.fakeSha256;
+          # Use a typed fake SRI so evaluation doesn't bail out early.
+          vendorHash = "sha256-+5/WOmVNAM+JRsh6KtzdQ+sHlcShnP/csIkwiwJ1WmI=";
+          go = pkgs.go;
 
           # CGO/sqlite
-          CGO_ENABLED = "1";
-          nativeBuildInputs = [ pkgs.pkg-config ];
-          buildInputs = [ pkgs.sqlite ];
+          env.CGO_ENABLED = "1";
+          nativeBuildInputs = [pkgs.pkg-config];
+          buildInputs = [pkgs.sqlite];
 
           # Build the main package at repo root to a 'bingo' binary
-          subPackages = [ "." ];
+          subPackages = ["."];
         };
       in {
         packages = {
@@ -55,7 +57,7 @@
             pkg-config
           ];
           env = {
-            CGO_ENABLED = 1;
+            CGO_ENABLED = "1";
           };
         };
       }
