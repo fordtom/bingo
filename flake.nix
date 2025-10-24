@@ -14,8 +14,6 @@
         pkgs = import nixpkgs {
           inherit system;
         };
-        lib = pkgs.lib;
-
         # Build the Go bot with CGO (sqlite) enabled
         bingoPkg = pkgs.buildGoModule {
           pname = "bingo";
