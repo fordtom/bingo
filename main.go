@@ -1,16 +1,16 @@
 package main
 
 import (
-    "io"
-    "log"
-    "os"
-    "os/signal"
-    "syscall"
+	"io"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
-    "github.com/bwmarrin/discordgo"
-    "github.com/fordtom/bingo/bot"
-    "github.com/fordtom/bingo/db"
-    "github.com/joho/godotenv"
+	"github.com/bwmarrin/discordgo"
+	"github.com/fordtom/bingo/bot"
+	"github.com/fordtom/bingo/db"
+	"github.com/joho/godotenv"
 )
 
 // initLogger configures the global logger to write to stdout and a file.
@@ -33,17 +33,17 @@ func initLogger() (func(), error) {
 // init loads environment variables from a .env file if present.
 // Existing environment variables are not overwritten.
 func init() {
-    _ = godotenv.Load()
+	_ = godotenv.Load()
 }
 
 func loadEnv() (string, string) {
-    token := os.Getenv("DISCORD_TOKEN")
-    if token == "" {
+	token := os.Getenv("DISCORD_TOKEN")
+	if token == "" {
 		log.Fatal("DISCORD_TOKEN is not set")
 	}
 
-    channelID := os.Getenv("CHANNEL_ID")
-    if channelID == "" {
+	channelID := os.Getenv("CHANNEL_ID")
+	if channelID == "" {
 		log.Fatal("CHANNEL_ID is not set")
 	}
 
