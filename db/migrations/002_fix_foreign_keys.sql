@@ -1,11 +1,40 @@
 -- Fix foreign key references after table renames
 -- SQLite doesn't update foreign key constraints when tables are renamed,
--- so votes and board_squares still reference events_new instead of events.
--- This migration recreates those tables with correct foreign key references.
+-- so tables still reference old table names (events_new, games_new, boards_new).
+-- This migration recreates affected tables with correct foreign key references.
 
 BEGIN TRANSACTION;
 
--- Recreate board_squares with correct FK reference to events
+-- Recreate events with correct FK reference to games
+CREATE TABLE events_fixed (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id INTEGER NOT NULL,
+    display_id INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('OPEN', 'CLOSED')) DEFAULT 'OPEN',
+    UNIQUE(game_id, display_id),
+    FOREIGN KEY (game_id) REFERENCES games(game_id)
+);
+INSERT INTO events_fixed SELECT * FROM events;
+DROP TABLE events;
+ALTER TABLE events_fixed RENAME TO events;
+CREATE INDEX idx_events_game ON events(game_id);
+CREATE INDEX idx_events_display ON events(game_id, display_id);
+
+-- Recreate boards with correct FK reference to games
+CREATE TABLE boards_fixed (
+    board_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    grid_size INTEGER DEFAULT 4,
+    UNIQUE(game_id, user_id),
+    FOREIGN KEY (game_id) REFERENCES games(game_id)
+);
+INSERT INTO boards_fixed SELECT * FROM boards;
+DROP TABLE boards;
+ALTER TABLE boards_fixed RENAME TO boards;
+
+-- Recreate board_squares with correct FK references to boards and events
 CREATE TABLE board_squares_fixed (
     board_id INTEGER,
     row INTEGER,
@@ -33,3 +62,4 @@ ALTER TABLE votes_fixed RENAME TO votes;
 CREATE INDEX idx_votes_event ON votes(event_id);
 
 COMMIT;
+
