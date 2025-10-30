@@ -16,17 +16,18 @@ func Help() *discordgo.ApplicationCommandOption {
 
 // HandleHelp processes the help command
 func HandleHelp(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption, database *db.DB) {
+	prefix := "/" + Prefix
 	helpText := "**Game Management**\n" +
-		"• `/bg new_game` - Create a game with events and player boards (requires CSV)\n" +
-		"• `/bg delete_game <game_id>` - Delete a game and all data\n" +
-		"• `/bg set_active_game <game_id>` - Set the active game\n\n" +
+		"• `" + prefix + " new_game` - Create a game with events and player boards (requires CSV)\n" +
+		"• `" + prefix + " delete_game <game_id>` - Delete a game and all data\n" +
+		"• `" + prefix + " set_active_game <game_id>` - Set the active game\n\n" +
 		"**Game Information**\n" +
-		"• `/bg list_games` - List all games with stats\n" +
-		"• `/bg list_events [game_id]` - List events with vote counts\n" +
-		"• `/bg view_board <user> [game_id]` - View a player's board\n\n" +
+		"• `" + prefix + " list_games` - List all games with stats\n" +
+		"• `" + prefix + " list_events [game_id]` - List events with vote counts\n" +
+		"• `" + prefix + " view_board <user> [game_id]` - View a player's board\n\n" +
 		"**Gameplay**\n" +
-		"• `/bg vote <event_id> [game_id]` - Vote that an event occurred\n" +
-		"• `/bg help` - Show this help\n\n" +
+		"• `" + prefix + " vote <event_id> [game_id]` - Vote that an event occurred\n" +
+		"• `" + prefix + " help` - Show this help\n\n" +
 		"**CSV Format**\n" +
 		"One event per line, optional header row:\n" +
 		"```\ndescription\nFirst event\nSecond event\n```\n\n" +
